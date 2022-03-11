@@ -173,6 +173,54 @@ namespace Microsoft.Build.UnitTests.BackEnd
             ValidateResolverResults(result);
         }
 
+        [Fact]
+        public void SdkResolverExceptionIsHandledCorrectly()
+        {
+            string entryProjectContents = $@"
+<Project>
+ {GetCurrentProcessIdTarget}
+<Target Name='GetResolverResults' Returns='@(ResolverResults)'>
+    <MSBuild Projects='ProjectWithSdkImport.proj'
+             Targets='GetResolverResults'>
+        <Output TaskParameter='TargetOutputs' ItemName='ResolverResults' />
+    </MSBuild>
+ </Target>
+</Project>
+";
+            string projectFolder = _env.CreateFolder().Path;
+
+            string entryProjectPath = Path.Combine(projectFolder, "EntryProject.proj");
+            File.WriteAllText(entryProjectPath, CleanupFileContents(entryProjectContents));
+
+            string projectWithSdkImportContents = $@"
+<Project>
+<Import Project='Sdk.props' Sdk='TestSdk' />
+{GetResolverResultsTarget}
+</Project>
+";
+
+            string projectWithSdkImportPath = Path.Combine(projectFolder, "ProjectWithSdkImport.proj");
+            File.WriteAllText(projectWithSdkImportPath, CleanupFileContents(projectWithSdkImportContents));
+
+            var sdkResolver = new SdkUtilities.ConfigurableMockSdkResolver(
+                (sdk, context, resultFactory) =>
+                {
+                    throw new ArgumentException();
+                });
+
+            ProjectInstance projectInstance = CreateProjectInstance(entryProjectPath, MSBuildDefaultToolsVersion, _projectCollection, sdkResolver);
+
+            var data = new BuildRequestData(projectInstance, new[] { "GetCurrentProcessId", "GetResolverResults" }, _projectCollection.HostServices);
+            var customparameters = new BuildParameters { EnableNodeReuse = false, Loggers = new ILogger[] { _logger } };
+
+            BuildResult result = _buildManager.Build(customparameters, data);
+
+            result.OverallResult.ShouldBe(BuildResultCode.Success);
+
+            ValidateRanInSeparateProcess(result);
+            ValidateResolverResults(result);
+        }
+
 
         private void ValidateRanInSeparateProcess(BuildResult result)
         {
@@ -202,9 +250,9 @@ namespace Microsoft.Build.UnitTests.BackEnd
             GetResolverResults("SdksImported").ShouldBeSameIgnoringOrder(new[] { "Sdk1", "Sdk2" });
         }
 
-        private ProjectInstance CreateProjectInstance(string projectPath, string toolsVersion, ProjectCollection projectCollection)
+        private ProjectInstance CreateProjectInstance(string projectPath, string toolsVersion, ProjectCollection projectCollection, SdkResolver sdkResolver = null)
         {
-            var sdkResolver = SetupSdkResolver(Path.GetDirectoryName(projectPath));
+            sdkResolver = SetupSdkResolver(Path.GetDirectoryName(projectPath), sdkResolver);
 
             var projectOptions = SdkUtilities.CreateProjectOptionsWithResolver(sdkResolver);
 
@@ -218,7 +266,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             return project.CreateProjectInstance(ProjectInstanceSettings.None, projectOptions.EvaluationContext);
         }
 
-        private SdkResolver SetupSdkResolver(string projectFolder)
+        private SdkResolver SetupSdkResolver(string projectFolder, SdkResolver sdkResolver = null)
         {
             Directory.CreateDirectory(Path.Combine(projectFolder, "Sdk1"));
             Directory.CreateDirectory(Path.Combine(projectFolder, "Sdk2"));
@@ -240,7 +288,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
             File.WriteAllText(Path.Combine(projectFolder, "Sdk1", "Sdk.props"), CleanupFileContents(sdk1propsContents));
             File.WriteAllText(Path.Combine(projectFolder, "Sdk2", "Sdk.props"), CleanupFileContents(sdk2propsContents));
 
-            var sdkResolver = new SdkUtilities.ConfigurableMockSdkResolver(
+            sdkResolver ??= new SdkUtilities.ConfigurableMockSdkResolver(
                 new Build.BackEnd.SdkResolution.SdkResult(
                         new SdkReference("TestSdk", null, null),
                         new[]

@@ -18,6 +18,13 @@
     <PackageDescription>This package contains the $(AssemblyName) assembly which implements common string-related functionality such as weak interning.</PackageDescription>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" VersionOverride="1.0.2" Condition="'$(TargetFramework)' == 'net35'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
     <AssemblyName>Microsoft.NET.StringTools.net35</AssemblyName>
   </PropertyGroup>

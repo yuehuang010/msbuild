@@ -8,8 +8,9 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
-#nullable disable
+#nullable enable
 
 namespace Microsoft.Build.BackEnd.SdkResolution
 {
@@ -38,7 +39,7 @@ namespace Microsoft.Build.BackEnd.SdkResolution
         }
 
         // Test hook
-        internal void InitializeForTests(SdkResolverLoader resolverLoader = null, IList<SdkResolver> resolvers = null)
+        internal void InitializeForTests(SdkResolverLoader? resolverLoader = null, IList<SdkResolver>? resolvers = null)
         {
             ((CachingSdkResolverService)_cachedSdkResolver).InitializeForTests(resolverLoader, resolvers);
         }
@@ -65,32 +66,32 @@ namespace Microsoft.Build.BackEnd.SdkResolution
             // Associate the node with the request
             request.NodeId = node;
 
-            SdkResult response = null;
+            // Create an SdkReference from the request
+            SdkReference sdkReference = new SdkReference(request.Name, request.Version, request.MinimumVersion);
+
+            ILoggingService loggingService = (Host.GetComponent(BuildComponentType.LoggingService) as ILoggingService)!;
+
+            EvaluationLoggingContext loggingContext = new EvaluationLoggingContext(loggingService, request.BuildEventContext, request.ProjectPath);
+
+            // Get the node manager and send the response back to the node that requested the SDK
+            INodeManager nodeManager = (Host.GetComponent(BuildComponentType.NodeManager) as INodeManager)!;
 
             try
             {
-                // Create an SdkReference from the request
-                SdkReference sdkReference = new SdkReference(request.Name, request.Version, request.MinimumVersion);
-
-                ILoggingService loggingService = Host.GetComponent(BuildComponentType.LoggingService) as ILoggingService;
-
                 // This call is usually cached so is very fast but can take longer for a new SDK that is downloaded.  Other queued threads for different SDKs will complete sooner and continue on which unblocks evaluations
-                response = ResolveSdk(request.SubmissionId, sdkReference, new EvaluationLoggingContext(loggingService, request.BuildEventContext, request.ProjectPath), request.ElementLocation, request.SolutionPath, request.ProjectPath, request.Interactive, request.IsRunningInVisualStudio);
+                SdkResult response = ResolveSdk(request.SubmissionId, sdkReference, loggingContext, request.ElementLocation, request.SolutionPath, request.ProjectPath, request.Interactive, request.IsRunningInVisualStudio);
+
+                nodeManager.SendData(request.NodeId, response);
+            }
+            catch (SdkResolverException e)
+            {
+                nodeManager.SendData(request.NodeId, new SdkResult(e));
             }
             catch (Exception e)
             {
-                ILoggingService loggingService = Host.GetComponent(BuildComponentType.LoggingService) as ILoggingService;
-
-                EvaluationLoggingContext loggingContext = new EvaluationLoggingContext(loggingService, request.BuildEventContext, request.ProjectPath);
-
                 loggingService.LogFatalBuildError(loggingContext.BuildEventContext, e, new BuildEventFileInfo(request.ElementLocation));
-            }
-            finally
-            {
-                // Get the node manager and send the response back to the node that requested the SDK
-                INodeManager nodeManager = Host.GetComponent(BuildComponentType.NodeManager) as INodeManager;
 
-                nodeManager.SendData(request.NodeId, response);
+                nodeManager.SendData(request.NodeId, new SdkResult(sdkReference, errors: new[] { e.Message }, warnings: Enumerable.Empty<string>()));
             }
         }
 

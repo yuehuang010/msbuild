@@ -46,6 +46,11 @@ namespace Microsoft.Build.BackEnd.SdkResolution
         {
         }
 
+        public SdkResult(Exception exception)
+        {
+            Exception = exception;
+        }
+
         public SdkResult(SdkReference sdkReference, IEnumerable<string> paths, string version, IDictionary<string, string> propertiesToAdd,
                          IDictionary<string, SdkResultItem> itemsToAdd, IEnumerable<string> warnings)
         {
@@ -78,6 +83,9 @@ namespace Microsoft.Build.BackEnd.SdkResolution
         public IEnumerable<string> Errors { get; }
 
         public IEnumerable<string> Warnings { get; }
+
+        public Exception Exception { get; }
+
         public void Translate(ITranslator translator)
         {
             translator.Translate(ref _success);
