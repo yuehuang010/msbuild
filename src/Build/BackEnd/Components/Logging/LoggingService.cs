@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Threading;
 using Microsoft.Build.BackEnd.Components.RequestBuilder;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using InternalLoggerException = Microsoft.Build.Exceptions.InternalLoggerException;
@@ -465,7 +466,7 @@ namespace Microsoft.Build.BackEnd.Logging
         /// <summary>
         /// Gets or sets a value that will error when the build process fails an up-to-date check.
         /// </summary>
-        public bool Question { get; set; }
+        public QuestionMode Question { get; set; }
 
         /// <summary>
         /// The list of descriptions which describe how to create forwarding loggers on a node.

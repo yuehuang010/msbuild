@@ -716,7 +716,7 @@ namespace Microsoft.Build.CommandLine
                 bool lowPriority = false;
                 string[] inputResultsCaches = null;
                 string outputResultsCache = null;
-                bool question = false;
+                QuestionMode question = QuestionMode.None;
                 string[] getProperty = Array.Empty<string>();
                 string[] getItem = Array.Empty<string>();
                 string[] getTargetResult = Array.Empty<string>();
@@ -1243,7 +1243,7 @@ namespace Microsoft.Build.CommandLine
             ProjectIsolationMode isolateProjects,
             GraphBuildOptions graphBuildOptions,
             bool lowPriority,
-            bool question,
+            QuestionMode question,
             string[] inputResultsCaches,
             string outputResultsCache,
             bool saveProjectResult,
@@ -2415,7 +2415,7 @@ namespace Microsoft.Build.CommandLine
             ref bool reportFileAccesses,
 #endif
             ref bool lowPriority,
-            ref bool question,
+            ref QuestionMode question,
             ref string[] getProperty,
             ref string[] getItem,
             ref string[] getTargetResult,
@@ -2636,7 +2636,10 @@ namespace Microsoft.Build.CommandLine
                         graphBuild = ProcessGraphBuildSwitch(commandLineSwitches[CommandLineSwitches.ParameterizedSwitch.GraphBuild]);
                     }
 
-                    question = commandLineSwitches.IsParameterizedSwitchSet(CommandLineSwitches.ParameterizedSwitch.Question);
+                    if (commandLineSwitches.IsParameterizedSwitchSet(CommandLineSwitches.ParameterizedSwitch.Question))
+                    {
+                        question = ProcessQuestionModeSwitch(commandLineSwitches[CommandLineSwitches.ParameterizedSwitch.Question]);
+                    }
 
                     inputResultsCaches = ProcessInputResultsCaches(commandLineSwitches);
 
@@ -3193,6 +3196,33 @@ namespace Microsoft.Build.CommandLine
         internal static ISet<string> ProcessWarnNotAsErrorSwitch(CommandLineSwitches commandLineSwitches)
         {
             return ProcessWarningRelatedSwitch(commandLineSwitches, CommandLineSwitches.ParameterizedSwitch.WarningsNotAsErrors);
+        }
+
+        internal static QuestionMode ProcessQuestionModeSwitch(string[] parameters)
+        {
+            if (parameters.Length > 1)
+            {
+                CommandLineSwitchException.Throw("InvalidQuestionValue", parameters[parameters.Length - 1]);
+            }
+
+            if (parameters.Length == 1)
+            {
+                string tok = parameters[0];
+                if (tok.Equals("Target", StringComparison.OrdinalIgnoreCase))
+                {
+                    return QuestionMode.Targets;
+                }
+                else if (tok.Equals("Task", StringComparison.OrdinalIgnoreCase))
+                {
+                    return QuestionMode.Tasks;
+                }
+                else
+                {
+                    CommandLineSwitchException.Throw("InvalidQuestionValue", parameters[0]);
+                }
+            }
+
+            return QuestionMode.Enable;
         }
 
         internal static bool ProcessBooleanSwitch(string[] parameters, bool defaultValue, string resourceName)

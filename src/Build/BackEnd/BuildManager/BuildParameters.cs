@@ -205,7 +205,7 @@ namespace Microsoft.Build.Execution
         /// </summary>
         private bool _logInitialPropertiesAndItems;
 
-        private bool _question;
+        private QuestionMode _question;
 
         /// <summary>
         /// The settings used to load the project under build
@@ -326,7 +326,6 @@ namespace Microsoft.Build.Execution
             get => _useSynchronousLogging;
             set => _useSynchronousLogging = value;
         }
-
 
         /// <summary>
         /// Indicates whether to emit a default error if a task returns false without logging an error.
@@ -828,7 +827,7 @@ namespace Microsoft.Build.Execution
         /// <summary>
         /// Gets or sets a value that will error when the build process fails an incremental check.
         /// </summary>
-        public bool Question
+        public QuestionMode Question
         {
             get => _question;
             set => _question = value;
@@ -897,7 +896,7 @@ namespace Microsoft.Build.Execution
             translator.Translate(ref _logInitialPropertiesAndItems);
             translator.TranslateEnum(ref _projectLoadSettings, (int)_projectLoadSettings);
             translator.Translate(ref _interactive);
-            translator.Translate(ref _question);
+            translator.TranslateEnum(ref _question, (int)_question);
             translator.TranslateEnum(ref _projectIsolationMode, (int)_projectIsolationMode);
             translator.Translate(ref _reportFileAccesses);
 

@@ -1184,7 +1184,7 @@ namespace Microsoft.Build.UnitTests
                                         isolateProjects: ProjectIsolationMode.False,
                                         graphBuildOptions: null,
                                         lowPriority: false,
-                                        question: false,
+                                        question: QuestionMode.None,
                                         inputResultsCaches: null,
                                         outputResultsCache: null,
                                         saveProjectResult: false,
@@ -1503,6 +1503,48 @@ namespace Microsoft.Build.UnitTests
                 {
                     exception.Message.ShouldContain(expectedWord);
                 }
+            }
+            else
+            {
+                exception.ShouldBeNull();
+            }
+        }
+
+
+        public static IEnumerable<object[]> ProcessQuestionModeSwitchData()
+        {
+
+            yield return new object[] { Array.Empty<string>(), QuestionMode.Enable, false };
+
+            yield return new object[] { new[] { "Target" }, QuestionMode.Targets, false };
+
+            yield return new object[] { new[] { "Task" }, QuestionMode.Tasks, false };
+            yield return new object[] { new[] { "T" }, QuestionMode.None, true };
+            yield return new object[] { new[] { "Ta" }, QuestionMode.None, true };
+            yield return new object[] { new[] { "Tas" }, QuestionMode.None, true };
+        }
+
+        [Theory]
+        [MemberData(nameof(ProcessQuestionModeSwitchData))]
+        public void ProcessQuestionModeSwitch(string[] parameters, QuestionMode expectedOptions, bool shouldThrow)
+        {
+            CommandLineSwitchException exception = null;
+
+            try
+            {
+                QuestionMode graphBuildOptions = MSBuildApp.ProcessQuestionModeSwitch(parameters);
+                graphBuildOptions.ShouldBe(expectedOptions);
+            }
+            catch (CommandLineSwitchException e)
+            {
+                exception = e;
+            }
+
+            if (shouldThrow)
+            {
+                exception.ShouldNotBeNull();
+
+                exception.Message.ShouldContain("Question value is not valid");
             }
             else
             {

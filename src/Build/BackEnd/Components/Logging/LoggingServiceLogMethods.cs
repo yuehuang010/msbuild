@@ -402,7 +402,7 @@ namespace Microsoft.Build.BackEnd.Logging
             string message = String.Empty;
             if (!OnlyLogCriticalEvents)
             {
-                if (Question)
+                if (Question != Execution.QuestionMode.None)
                 {
                     message = ResourceUtilities.GetResourceString(success ? "BuildFinishedQuestionSuccess" : "BuildFinishedQuestionFailure");
                 }

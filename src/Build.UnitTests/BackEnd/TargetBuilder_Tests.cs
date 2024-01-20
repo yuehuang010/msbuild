@@ -250,7 +250,7 @@ Done building target ""Build"" in project ""build.proj"".".Replace("\r\n", "\n")
             {
                 var buildParameters = new BuildParameters()
                 {
-                    Question = true,
+                    Question = QuestionMode.Targets,
                 };
 
                 using (var buildSession = new Helpers.BuildManagerSession(env, buildParameters))
