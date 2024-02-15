@@ -195,7 +195,7 @@ namespace Microsoft.Build.Tasks
                     Log.LogMessageFromResources(MessageImportance.Low, "Unzip.DidNotUnzipBecauseOfFileMatch", zipArchiveEntry.FullName, destinationPath.FullName, nameof(SkipUnchangedFiles), "true");
                     continue;
                 }
-                else if (FailIfNotIncremental)
+                else if (SkipUnchangedFiles && FailIfNotIncremental)
                 {
                     Log.LogErrorFromResources("Unzip.FileComment", zipArchiveEntry.FullName, destinationPath.FullName);
                     continue;

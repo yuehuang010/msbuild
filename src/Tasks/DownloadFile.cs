@@ -187,7 +187,7 @@ namespace Microsoft.Build.Tasks
 
                         return;
                     }
-                    else if (FailIfNotIncremental)
+                    else if (SkipUnchangedFiles && FailIfNotIncremental)
                     {
                         Log.LogErrorFromResources("DownloadFile.Downloading", SourceUrl, destinationFile.FullName, response.Content.Headers.ContentLength);
                         return;
