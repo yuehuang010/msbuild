@@ -134,8 +134,8 @@
     </note>
       </trans-unit>
       <trans-unit id="InvalidQuestionValue">
-        <source>MSBUILD : error MSB1067: Question value is not valid. It should be one of 'Target', 'Task', or none. {0}</source>
-        <target state="new">MSBUILD : error MSB1067: Question value is not valid. It should be one of 'Target', 'Task', or none. {0}</target>
+        <source>MSBUILD : error MSB1068: Question value is not valid. It should be one of 'Target', 'Task', or none. {0}</source>
+        <target state="new">MSBUILD : error MSB1068: Question value is not valid. It should be one of 'Target', 'Task', or none. {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidTerminalLoggerValue">
