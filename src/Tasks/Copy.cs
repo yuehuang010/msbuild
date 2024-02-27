@@ -258,28 +258,14 @@ namespace Microsoft.Build.Tasks
             {
                 if (!FileSystems.Default.DirectoryExists(destinationFolder))
                 {
-                    if (FailIfNotIncremental)
-                    {
-                        Log.LogError(CreatesDirectory, destinationFolder);
-                        return false;
-                    }
-                    else
-                    {
-                        Log.LogMessage(MessageImportance.Normal, CreatesDirectory, destinationFolder);
-                        Directory.CreateDirectory(destinationFolder);
-                    }
+                    Log.LogMessage(MessageImportance.Normal, CreatesDirectory, destinationFolder);
+                    Directory.CreateDirectory(destinationFolder);
                 }
 
                 // It's very common for a lot of files to be copied to the same folder.
                 // Eg., "c:\foo\a"->"c:\bar\a", "c:\foo\b"->"c:\bar\b" and so forth.
                 // We don't want to check whether this folder exists for every single file we copy. So store which we've checked.
                 _directoriesKnownToExist.TryAdd(destinationFolder, true);
-            }
-
-            if (FailIfNotIncremental)
-            {
-                Log.LogError(FileComment, sourceFileState.FileNameFullPath, destinationFileState.FileNameFullPath);
-                return false;
             }
 
             if (OverwriteReadOnlyFiles)

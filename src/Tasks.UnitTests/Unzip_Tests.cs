@@ -66,7 +66,7 @@ namespace Microsoft.Build.Tasks.UnitTests
                     BuildEngine = _mockEngine,
                     DestinationFolder = new TaskItem(destination.Path),
                     OverwriteReadOnlyFiles = true,
-                    SkipUnchangedFiles = false,
+                    SkipUnchangedFiles = true,
                     SourceFiles = new ITaskItem[] { new TaskItem(zipArchive.Path) },
                     FailIfNotIncremental = true,
                 };
@@ -79,7 +79,7 @@ namespace Microsoft.Build.Tasks.UnitTests
                     BuildEngine = _mockEngine,
                     DestinationFolder = new TaskItem(destination.Path),
                     OverwriteReadOnlyFiles = true,
-                    SkipUnchangedFiles = false,
+                    SkipUnchangedFiles = true,
                     SourceFiles = new ITaskItem[] { new TaskItem(zipArchive.Path) },
                     FailIfNotIncremental = false,
                 };
